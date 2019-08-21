@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>黑色内阁水表demo</title>
+  <style>
+    body{
+      text-align: center;
+    }
+    .hidden{
+      display: none;
+    }
+    .row{
+      display: flex;
+      justify-content: space-around;
+      flex-direction: row;
+    }
+    .row>div{
+      width: 200px;
+      margin-bottom: 20px;
+      
+    }
+    .meter{
+      height: 200px;
+      border: 1px solid #000;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+    }
+    .status{
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: red;
+    }
+    .status.success{
+      background: green;
+    }
+    .tips{
+      height: 16px;
+    }
+    .val{
+      font-size: 20px;
+      color: red;
+    }
+    ol{
+      text-align: left;
+    }
+    ol li{
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">loading javascript...</div>
+  <div class="container hidden" id="app">
+      <div class="row"><div>status:<span class="status" :class="{success: isPass}"></span></div></div>
+      <div class="row">
+        <div class="meter meter0">
+          <div>meter0</div>
+          <div>value: X<span class="val">{{step.value}}</span></div>
+          <div class="tips"><span v-show = "step.value === step.max">max</span><span v-show = "step.value === step.min">min</span></div>
+          <div class="btn-group">
+            <button class="minus" @click = "minus(-1, 1)">-</button>
+            <button class="plus" @click = "plus(-1, 1)">+</button>
+          </div>
+          <div>target: {{step.target}}</div>
+        </div>
+      </div>
+      <div class="row">
+          <div v-for = "(meter, index) in meters" class="meter">
+            <div>{{meter.key}}</div>
+            <div>value: <span class="val">{{format(meter.value)}}</span></div>
+            <div class="tips"><span v-show = "meter.value === meter.max">max</span><span v-show = "meter.value === meter.min">min</span></div>
+            <div class="btn-group">
+              <button @click = "minus(index, step.value)">-</button>
+              <button @click = "plus(index, step.value)">+</button>
+            </div>
+            <div>target: {{meter.target}}</div>
+          </div>
+      </div>
+      <div class="row"><em>点击‘+’、‘-’按钮改变表盘的值！<br>以上为逻辑关系演示。实际制作中，屏幕只显示value(红色部分)和‘max’/‘min’</em></div>
+      <ol class="descriptions">
+        <li>总共有四只数字水表（水表0，水表A、水表B、水表C），由具有档位的/无尽头/无0点的旋钮控制。左旋数字减少，右旋数字增加。当数字达到最大值时，屏幕显示max，提示玩家到达最大值，右旋数字不再变化，达到最小值时同理。四个水表的初始值都在最小值处。</li>
+        <li>水表0共有4个刻度，分别是2、3、4、5。每转动一格旋钮，数值增大1。水表0的值决定了玩家操作另外三个水表时，直接被玩家操作的水表每旋转一格，水表值增加的步长。比如，当玩家将水表0设置在4时，玩家操作水表C，每旋转水表C一次，水表C的值增加4。</li>
+        <li>水表A、B、C的最小值都为0，最大值分别是水表A：48、B：24、C：48。水表数值精确到小数点后一位。</li>
+        <li>玩家操纵水表A时，会对水表B、水表C产生单方向的影响。当玩家转动水表A时，会直接影响水表B和C。不论原本水表B和C的值如何，当水表A的值发生变动时，水表B的值将会变为水表A的值的1/3（保留小数点后一位），水表C的值将会变成水表A的值的2/3（保留小数点后一位）。</li>
+        <li>当玩家操纵水表B时，会对水表C产生单方向的影响。不论原本水表C的值如何，当玩家操纵水表B时，水表C的值会立刻随水表B变动，水表C的值将会变成水表B的值的两倍。玩家操纵水表B不会影响水表A既有的值。</li>
+        <li>玩家直接操纵水表C，不会改变其他水表既有的值。</li>
+        <li>玩家的获胜条件是：<br>水表0 --- 4 <br>水表A --- 33<br>水表B ---13<br>水表C ---8</li>
+        <li>当玩家达到获胜条件时，开一个电磁锁，并播放一段声音。</li>
+        <li>当玩家胜利以后，无论再怎么操作水表，电磁锁仍然保持打开状态。需要重启机关，才能让电磁锁上电</li>
+        <li>表盘显示屏宽度在10cm-12cm区间内。3个表的屏幕尺寸统一</li>
+      </ol>
+  </div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script>
+  window.onload = function () {
+    document.querySelector('.loading').classList.add('hidden')
+    document.querySelector('.container').classList.remove('hidden')
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        step: {
+          value: 2,
+          min: 2,
+          max:5,
+          target: 4
+        },
+        meters: [{
+          key: 'meterA',
+          value: 0,
+          min: 0,
+          max: 48,
+          target: 33
+        },{
+          key: 'meterB',
+          value: 0,
+          min: 0,
+          max: 24,
+          target: 13
+        },{
+          key: 'meterC',
+          value: 0,
+          min: 0,
+          max: 48,
+          target: 8
+        }]
+      },
+      computed: {
+        isPass: function () {
+          var isMeterPass = this.meters.every(function (meter) {
+            return meter.value === meter.target
+          })
+          var isStepPass = this.step.value === this.step.target
+          return isMeterPass && isStepPass
+        }
+      },
+      methods: {
+        format: function (val) {
+          val = parseInt(val * 10) / 10
+          var arr = val.toString().split('.')
+          if (val < 10) arr[0] = '0' + arr[0]
+          if (!arr[1]) arr[1] = 0
+          return arr.join('.')
+        },
+        minus: function (index, step) {
+          var meter = index === -1 ? this.step : this.meters[index]
+          var min = meter.min
+          var val = meter.value - step
+          if (val < min) val = min
+          meter.value = val
+          if (index !== -1) {
+            this.changeHandler(index)
+          }
+          this.checkVals()
+        },
+        plus: function (index, step) {
+          var meter = index === -1 ? this.step : this.meters[index]
+          var max = meter.max
+          var val = meter.value + step
+          if (val > max) val = max
+          meter.value = val
+          if (index !== -1) {
+            this.changeHandler(index)
+          }
+          this.checkVals()
+        },
+        changeHandler: function (index) {
+          switch (index) {
+            case 0:
+              this.meters[1].value = this.meters[0].value / 3
+              this.meters[2].value = this.meters[0].value * 2 / 3
+              break;
+            case 1:
+              this.meters[2].value = this.meters[1].value * 2
+            default:
+              break;
+          }
+        }
+      }
+    })
+  }
+</script>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+	<title>黑色内阁流程图</title>
+  <style type="text/css">
+    .hidden{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="loading">loading javascript...</div>
+  <div class="mermaid">
+  graph TD;
+    start(机关待机状态)-->step1(玩家拿起电话拨通电话号码);
+    step1 --> id1{号码是否是5858}
+    id1-->|是|wait(嘟嘟两声)
+    id1-->|否|void(忙音/等待玩家挂断电话)
+    void-->start
+    wait-->step2(播放音频黑色内阁1)
+    step2-->step3(玩家回答一句话)
+    step3--> id2{玩家回答是否是:超级炸弹}
+    id2-->|是|step4(播放音频黑色内阁2)
+    id2-->|否|step5(播放音频黑色内阁4)
+    step5--> start
+    step4--> step6(播放完后等带玩家挂机)
+    step6--> step7(等待15秒)
+    step7--> step8(电话铃响)
+    step8--> step9(玩家接起电话)
+    step9--> step10(播放音频黑色内阁3)
+    step10--> step11(播放完毕玩家挂机)
+    step11--> step12(打开一个12V电磁锁)
+  </div>
+  <div>
+    <a href="https://pan.baidu.com/s/1q4ThOnqe3Pk0KQfUYPecDg">音频文件下载链接</a>
+    <div>密码：8zy5</div>
+  </div>
+  <script src="https://unpkg.com/mermaid@7.1.0/dist/mermaid.min.js"></script>
+  <script>
+    window.onload = function () {
+      document.querySelector('.loading').classList.add('hidden')
+      document.querySelector('.mermaid').classList.remove('hidden')
+      mermaid.initialize({startOnLoad:true});
+    }
+    
+  </script>
+</body>
+</html>
