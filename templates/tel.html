@@ -2,16 +2,17 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>黑色内阁流程图</title>
   <style type="text/css">
     .hidden{
-      display: none;
+      visibility: hidden;
     }
   </style>
 </head>
 <body>
   <div class="loading">loading javascript...</div>
-  <div class="mermaid">
+  <div class="mermaid hidden">
   graph TD;
     start(机关待机状态)-->step1(玩家拿起电话拨通电话号码);
     step1 --> id1{号码是否是5858}

@@ -17,6 +17,9 @@
   },
   "homepage": "https://github.com/ourwashroom/bkj-escape#readme",
   "dependencies": {
-    "koa": "^2.8.1"
+    "koa": "^2.8.1",
+    "koa-router": "^7.4.0",
+    "koa-static": "^5.0.0",
+    "koa-views": "^6.2.0"
   }
 }
